@@ -1,0 +1,88 @@
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+
+namespace LanoiraM_4thtest.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UserController : ControllerBase
+    {
+        private static readonly List<User> users = new List<User>();
+
+        [HttpGet] // api/user || GET
+        public ActionResult<IEnumerable<User>> GetAll()
+        {
+            return Ok(users); //200 ok
+        }
+
+        [HttpGet("{id}")] // api/user/{id} || GET
+        public ActionResult<User> GetById(int id)
+        {
+            var user = users.FirstOrDefault(x => x.Id == id);
+            if (user == null)
+                return NotFound(); // 404 nf
+            return Ok(user); // 200 ok
+        }
+
+        [HttpPost] // api/user || POST
+        public ActionResult<User> CreateUser(User user)
+        {
+            if (user == null) return BadRequest(); //400 Bad Request
+
+            user.Id = users.Count > 0 ? users.Max(x => x.Id) + 1 : 1;
+            users.Add(user);
+
+            // 201 || Created
+            return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
+        }
+
+        [HttpPut("{id}")] // api/user/{id} || PUT
+        public IActionResult Update(int id, User updUser)
+        {
+            if (updUser == null || updUser.Id != id) return BadRequest();
+
+            var existingUser = users.FirstOrDefault(x =>x.Id == id);
+            if (existingUser == null)
+                return NotFound(); // 404 Not Found
+
+            existingUser = users[users.FindIndex(x => x.Id == id)] = updUser;
+            return NoContent(); // 204 No Content
+        }
+
+        [HttpDelete("{id}")] // api/user/{id} || DELETE
+        public IActionResult Delete(int id)
+        {
+            var user = users.FirstOrDefault(x => x.Id == id);
+            if (user == null) return NotFound();
+
+            users.Remove(user);
+            return NoContent(); //204 No Content
+        }
+    }
+
+    public class User
+    {
+        public int Id { get; set; }
+
+        [Required, StringLength(10)]
+        public string FirstName { get; set; } 
+
+        [Required, StringLength(10)]
+        public string LastName { get; set; }
+
+        [Required, EmailAddress]
+        public string EmailAddress { get; set; }
+
+        [Required, StringLength(10)]
+        public string City_Address { get; set; }
+
+        [Phone]
+        public string Phone { get; set; }
+
+        [Url]
+        public string URL { get; set; }
+
+        [Timestamp]
+        public DateTime Timestamp { get; set; } = DateTime.Now;
+    }
+}
